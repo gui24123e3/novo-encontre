@@ -1,0 +1,229 @@
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunidade de Avisos</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #map {
+            width: 80%;
+            height: 500px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container {
+            width: 80%;
+            background-color: white;
+            border-radius: 17px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-top: 27px;
+        }
+
+        .form-container input,
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        .form-container button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 0;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-container button:hover {
+            background-color: #218838;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            #map {
+                width: 200%;
+                height: 400px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Comunidade de Avisos</h1>
+    <div id="map"></div>
+
+    <div class="form-container">
+        <h2>Adicionar Aviso</h2>
+        <form id="addAvisoForm">
+            <input type="text" id="descricao" placeholder="Título do aviso (Descrição)" required />
+            <textarea id="detalhes" placeholder="Detalhes adicionais" rows="4" required></textarea>
+
+            <label for="icon">Ícone:</label>
+            <select id="icon">
+                <option value="./assets/icons8-certo-48.png">Ícone Padrão</option>
+                <option value="./assets/icons8-posto-de-gasolina-100.png">Posto de Gasolina</option>
+                <option value="./assets/icons8-ambulância-100.png">Ambulância</option>
+            </select>
+
+            <button type="submit">Adicionar Aviso</button>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Função para criar ícones personalizados
+        function createCustomIcon(iconUrl) {
+            return L.icon({
+                iconUrl: iconUrl,
+                iconSize: [40, 40], // Tamanho do ícone
+                iconAnchor: [20, 40], // Ponto de ancoragem do ícone
+                popupAnchor: [0, -40] // Ponto de ancoragem do popup
+            });
+        }
+
+        // Ícone padrão
+        const defaultIcon = createCustomIcon('./img/icons8-certo-48.png');
+        
+
+        let map = L.map('map').setView([-23.5505, -46.6333], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let currentMarker = null;
+        let currentIcon = defaultIcon; // Define o ícone padrão como o inicial
+
+        // Evento de clique no mapa para adicionar marcador
+        map.on('click', function (e) {
+            const latitude = e.latlng.lat;
+            const longitude = e.latlng.lng;
+
+            if (currentMarker) {
+                currentMarker.remove();
+            }
+
+            currentMarker = L.marker([latitude, longitude], {
+                icon: currentIcon // Use o ícone atual (pode ser o padrão ou o selecionado)
+            }).addTo(map);
+
+            document.getElementById('descricao').value = '';
+            document.getElementById('detalhes').value = '';
+        });
+
+        // Evento de mudança no menu suspenso de ícones
+        document.getElementById('icon').addEventListener('change', function () {
+            const selectedIconUrl = this.value;
+            currentIcon = createCustomIcon(selectedIconUrl);
+            if (currentMarker) {
+                currentMarker.setIcon(currentIcon);
+            }
+        });
+
+        // Envio do formulário de adicionar aviso
+        document.getElementById('addAvisoForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const descricao = document.getElementById('descricao').value;
+            const detalhes = document.getElementById('detalhes').value;
+
+            if (descricao && detalhes && currentMarker) {
+                const latitude = currentMarker.getLatLng().lat;
+                const longitude = currentMarker.getLatLng().lng;
+                const icon = document.getElementById('icon').value; // Obtém o ícone selecionado
+
+                const data = {
+                    latitude: latitude,
+                    longitude: longitude,
+                    descricao: descricao,
+                    detalhes: detalhes,
+                    icon: icon // Inclui o ícone no objeto de dados
+                };
+
+                addAviso(data);
+            } else {
+                alert('Preencha todos os campos e clique no mapa para selecionar um local.');
+            }
+        });
+
+        // Função para adicionar aviso ao banco de dados
+        async function addAviso(data) {
+            const response = await fetch('http://localhost:3000/api/avisos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const aviso = await response.json();
+                alert('Aviso adicionado com sucesso!');
+                loadAvisos();
+            } else {
+                alert('Erro ao adicionar aviso.');
+            }
+        }
+
+        // Função para carregar os avisos no mapa
+        async function loadAvisos() {
+            const response = await fetch('http://localhost:3000/api/avisos');
+            if (response.ok) {
+                const data = await response.json();
+                data.dados.forEach(aviso => {
+                    const icon = aviso.icon ? createCustomIcon(aviso.icon) : defaultIcon;
+                    const marker = L.marker([aviso.latitude, aviso.longitude], {
+                            icon: icon
+                        })
+                        .addTo(map)
+                        .bindPopup(
+                            `<div class="popup-content">
+                                <strong>Descrição:</strong><br>${aviso.descricao}<br>
+                                <strong>Detalhes:</strong><br>${aviso.detalhes}<br>
+                                <strong>Data:</strong> ${new Date(aviso.created_at).toLocaleString()}
+                            </div>`
+                        );
+                });
+            } else {
+                alert('Erro ao carregar avisos.');
+            }
+        }
+
+        // Carregar avisos ao carregar a página
+        window.onload = loadAvisos;
+    </script>
+</body>
+
+</html>

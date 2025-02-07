@@ -1,0 +1,208 @@
+const express = require('express');
+const { Pool } = require('pg');
+const cors = require('cors');
+
+const app = express();
+const port = 3000;
+
+app.use(cors());
+app.use(express.json()); // Para lidar com dados JSON no corpo das requisições
+
+// Configuração do pool de conexão com o Supabase (PostgreSQL)
+const pool = new Pool({
+    connectionString: 'postgresql://postgres.ikjhufiucbzixzykedhr:@Tonystark19@aws-0-sa-east-1.pooler.supabase.com:6543/postgres',
+});
+
+// Endpoint para adicionar um aviso
+app.post('/api/avisos', async (req, res) => {
+    const { latitude, longitude, descricao, detalhes } = req.body;
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO avisos (latitude, longitude, descricao, detalhes) VALUES ($1, $2, $3, $4) RETURNING *',
+            [latitude, longitude, descricao, detalhes]
+        );
+        res.status(201).json(result.rows[0]); // Retorna o aviso inserido
+    } catch (error) {
+        console.error('Erro ao adicionar aviso:', error);
+        res.status(500).json({ error: 'Erro ao adicionar aviso.' });
+    }
+});
+
+// Endpoint para listar os avisos
+app.get('/api/avisos', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT id, latitude, longitude, descricao, detalhes, created_at FROM avisos'); // Incluindo o campo detalhes
+        res.status(200).json({ dados: result.rows });
+    } catch (error) {
+        console.error('Erro ao buscar avisos:', error);
+        res.status(500).json({ error: 'Erro ao buscar avisos.' });
+    }
+});
+
+// Endpoint para excluir um aviso
+app.delete('/api/avisos/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const result = await pool.query('DELETE FROM avisos WHERE id = $1', [id]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ message: 'Aviso excluído com sucesso.' });
+        } else {
+            res.status(404).json({ error: 'Aviso não encontrado.' });
+        }
+    } catch (error) {
+        console.error('Erro ao excluir aviso:', error);
+        res.status(500).json({ error: 'Erro ao excluir aviso.' });
+    }
+});
+
+
+// Simulação de sessão (armazenando usuários logados em memória)
+const sessoes = {};
+
+// Registrar um usuário
+app.post('/api/usuarios/registro', async (req, res) => {
+    const { nome, email, senha } = req.body;
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email',
+            [nome, email, senha]
+        );
+
+        res.status(201).json({ message: 'Usuário registrado com sucesso!', user: result.rows[0] });
+    } catch (error) {
+        console.error('Erro ao registrar usuário:', error);
+        res.status(500).json({ error: 'Erro ao registrar usuário.' });
+    }
+});
+
+// Login
+app.post('/api/usuarios/login', async (req, res) => {
+    const { email, senha } = req.body;
+
+    try {
+        const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: 'Usuário não encontrado.' });
+        }
+
+        const usuario = result.rows[0];
+
+        if (usuario.senha !== senha) {
+            return res.status(401).json({ error: 'Senha incorreta.' });
+        }
+
+        // Criar uma "sessão" (simplesmente armazenando o ID do usuário)
+        const token = `${usuario.id}-${Date.now()}`;
+        sessoes[token] = usuario;
+
+        res.json({ message: 'Login bem-sucedido!', token });
+    } catch (error) {
+        console.error('Erro ao fazer login:', error);
+        res.status(500).json({ error: 'Erro ao fazer login.' });
+    }
+});
+
+// Obter dados do usuário logado
+app.get('/api/usuarios/me', (req, res) => {
+    const token = req.headers['authorization'];
+
+    if (!token || !sessoes[token]) {
+        return res.status(403).json({ error: 'Não autorizado.' });
+    }
+
+    res.json(sessoes[token]);
+});
+
+// Logout (remover sessão)
+app.post('/api/usuarios/logout', (req, res) => {
+    const token = req.headers['authorization'];
+
+    if (sessoes[token]) {
+        delete sessoes[token];
+    }
+
+    res.json({ message: 'Logout realizado com sucesso.' });
+});
+
+// Configuração do Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'seu-email@gmail.com', // Substitua com seu e-mail
+        pass: 'sua-senha-de-aplicativo' // Substitua com a senha de aplicativo gerada
+    }
+});
+
+// Endpoint para enviar o código de recuperação
+app.post('/api/usuarios/recuperar-senha', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Verifica se o usuário existe
+        const result = await pool.query('SELECT id, email FROM usuarios WHERE email = $1', [email]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+
+        const user = result.rows[0];
+
+        // Gera um código de recuperação
+        const recoveryCode = crypto.randomBytes(3).toString('hex'); // Gera um código de 6 caracteres
+        const expiresAt = Date.now() + 3600000; // O código expira em 1 hora
+
+        // Salva o código de recuperação e sua data de expiração no banco de dados
+        await pool.query('UPDATE usuarios SET recovery_code = $1, recovery_expires_at = $2 WHERE email = $3', 
+            [recoveryCode, expiresAt, email]);
+
+        // Envia o código de recuperação por e-mail
+        const mailOptions = {
+            from: 'seu-email@gmail.com', 
+            to: email,
+            subject: 'Código de recuperação de senha',
+            text: `Seu código de recuperação é: ${recoveryCode}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return res.status(500).json({ error: 'Erro ao enviar o e-mail.' });
+            }
+            res.status(200).json({ message: 'Código de recuperação enviado para o seu e-mail.' });
+        });
+    } catch (error) {
+        console.error('Erro ao enviar o código de recuperação:', error);
+        res.status(500).json({ error: 'Erro ao processar a solicitação.' });
+    }
+});
+
+// Endpoint para redefinir a senha
+app.post('/api/usuarios/redefinir-senha', async (req, res) => {
+    const { email, recoveryCode, novaSenha } = req.body;
+
+    try {
+        // Verifica se o código de recuperação é válido
+        const result = await pool.query('SELECT * FROM usuarios WHERE email = $1 AND recovery_code = $2 AND recovery_expires_at > $3', 
+            [email, recoveryCode, Date.now()]);
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Código de recuperação inválido ou expirado.' });
+        }
+
+        // Atualiza a senha do usuário
+        await pool.query('UPDATE usuarios SET senha = $1, recovery_code = NULL, recovery_expires_at = NULL WHERE email = $2', 
+            [novaSenha, email]);
+
+        res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        res.status(500).json({ error: 'Erro ao redefinir a senha.' });
+    }
+});
+
+// Inicia o servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});

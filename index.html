@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Comércio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            resize: vertical;
+        }
+        .form-group button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .message.success {
+            color: #28a745;
+        }
+        .message.error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Cadastro de Comércio</h2>
+        <form id="comercioForm">
+            <div class="form-group">
+                <input type="text" id="nome" name="nome" placeholder="Nome do Comércio" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="categoria" name="categoria" placeholder="Categoria" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="cidade" name="cidade" placeholder="Cidade">
+            </div>
+            <div class="form-group">
+                <input type="text" id="estado" name="estado" placeholder="Estado">
+            </div>
+            <div class="form-group">
+                <input type="text" id="telefone" name="telefone" placeholder="Telefone">
+            </div>
+            <div class="form-group">
+                <input type="text" id="horario_funcionamento" name="horario_funcionamento" placeholder="Horário de Funcionamento">
+            </div>
+            <div class="form-group">
+                <textarea id="descricao" name="descricao" placeholder="Descrição do Comércio"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="file" id="imagem_capa" name="imagem_capa" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <button type="submit">Cadastrar Comércio</button>
+            </div>
+        </form>
+        <div id="responseMessage" class="message"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('comercioForm');
+        const responseMessage = document.getElementById('responseMessage');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('nome', document.getElementById('nome').value);
+            formData.append('categoria', document.getElementById('categoria').value);
+            formData.append('cidade', document.getElementById('cidade').value);
+            formData.append('estado', document.getElementById('estado').value);
+            formData.append('telefone', document.getElementById('telefone').value);
+            formData.append('horario_funcionamento', document.getElementById('horario_funcionamento').value);
+            formData.append('descricao', document.getElementById('descricao').value);
+            formData.append('imagem_capa', document.getElementById('imagem_capa').files[0]);
+
+            try {
+                const response = await fetch('http://localhost:3000/cadastro-comercio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    responseMessage.textContent = 'Comércio cadastrado com sucesso!';
+                    responseMessage.className = 'message success';
+                } else {
+                    throw new Error(data.message || 'Erro ao cadastrar comércio');
+                }
+            } catch (error) {
+                responseMessage.textContent = error.message;
+                responseMessage.className = 'message error';
+            }
+        });
+    </script>
+
+</body>
+</html>
