@@ -1,3 +1,5 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5503,
+    "appService.defaultWebAppToDeploy": "/subscriptions/7193908b-800b-4c66-afbe-4a66632b8346/resourceGroups/appsvc_windows_centralus/providers/Microsoft.Web/sites/cardapio2",
+    "appService.deploySubpath": "."
 }

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <title>Postos Baratos</title>
+  <style>
+    /* Reset e estilos básicos */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fafafa;
+      color: #2d3748;
+      height: 100vh; /* Garantir que o corpo ocupe toda a altura da tela */
+      display: flex;
+      flex-direction: column;
+    }
+  
+    /* Header aprimorado */
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(0, 119, 255, 0.65), rgba(0, 0, 0, 0.85));
+      backdrop-filter: blur(6px);
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+    }
+  
+    /* Estado escondido */
+    .header.hide-header {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  
+    .header.show-header {
+      position: fixed;
+      transform: translateY(0);
+      opacity: 1;
+    }
+  
+    /* Logo e Nome */
+    .header-logo {
+        display: flex;
+        align-items: center;
+    }
+  
+    .header-icon {
+        width: 50px;
+        height: auto;
+        margin-right: 40px;
+    }
+  
+    /* Estilos para o logo fora do container */
+    .logo-container {
+        text-align: center; /* Centraliza o logo horizontalmente */
+        margin-top: 80px; /* Adiciona margem superior para espaçamento */
+    }
+  
+    .logo-container img {
+        width: 100px; /* Ajuste o tamanho do logo conforme necessário */
+        height: auto;
+    }
+  
+    .header-text {
+      font-size: 1.2em;
+      font-weight: 200;
+      color: #ffffff;
+      font-family: sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  
+    /* Botões de Navegação */
+    .header-buttons {
+      display: flex;
+      gap: 20px;
+    }
+  
+    .header-buttons button {
+      background-color: transparent;
+      border: 2px solid #ffffff;
+      padding: 10px 25px;
+      border-radius: 25px;
+      font-size: 1em;
+      color: #ffffff;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    }
+  
+    .header-buttons button:hover {
+      background-color: #ffffff;
+      color: #000000;
+      transform: translateY(-3px);
+    }
+  
+    /* Botão de Menu (Hamburger) - inicialmente oculto */
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+  
+    /* Responsividade - telas até 768px */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+  
+      /* Esconde os botões de navegação e os posiciona como dropdown */
+      .header-buttons {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: rgba(0, 0, 0, 0.9);
+        padding: 10px 0;
+      }
+  
+      /* Quando a classe 'show' for adicionada, exibe o menu */
+      .header-buttons.show {
+        display: flex;
+      }
+  
+      .header-buttons button {
+        margin: 5px auto;
+        width: 90%;
+      }
+    }
+  
+    .container {
+      max-width: 1000px;
+      margin: 100px auto 20px; /* Ajuste da margem superior */
+      background: rgb(224, 224, 224);
+      padding: 20px;
+      border-radius: 38px;
+      box-shadow: 0 2 20px rgba(0, 0, 0, 0.1);
+      flex-grow: 1; /* Faz o conteúdo crescer para ocupar o espaço restante */
+    }
+  
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+  
+    input, button {
+      padding: 15px;
+      font-size: 16px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+    }
+  
+    button {
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+  
+    button:hover {
+      background: #218838;
+    }
+  
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      border-radius: 28px;
+      border: 2px solid #000000;
+      overflow: hidden;
+      box-shadow: 0 8px 6px rgba(0, 0, 0, 0.1);
+    }
+  
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+    }
+  
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border: 1px solid #c0c0c0;
+      font-size: 14px;
+    }
+  
+    th {
+      background-color: #333;
+      color: white;
+      font-weight: 600;
+    }
+  
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  
+    tr:hover {
+      background-color: #f1f1f1;
+      cursor: pointer;
+    }
+  
+    .price {
+      font-weight: bold;
+      color: #28a745;
+    }
+  
+    .actions {
+      text-align: center;
+    }
+  
+    .edit-btn {
+      background: linear-gradient(135deg, rgba(0, 162, 255, 0.756), rgba(0, 0, 0, 0.548));
+      border: none;
+      padding: 18px 18px;
+      cursor: pointer;
+      border-radius: 25px;
+      transition: background 0.3s ease;
+    }
+  
+    .edit-btn:hover {
+      background: #0068e0;
+    }
+  
+    /* Responsividade: Ajuste para telas menores */
+    @media (max-width: 768px) {
+      .table-container {
+        margin-bottom: 10px;
+      }
+  
+      table {
+        font-size: 12px;
+      }
+  
+      th, td {
+        padding: 10px;
+      }
+  
+      .edit-btn {
+        padding: 6px 12px;
+      }
+    }
+  
+    footer {
+      background: linear-gradient(135deg, rgba(0, 119, 255, 0.607), rgb(0, 0, 0));
+      color: white;
+      padding: 40px 20px;
+      margin-top: auto; /* Faz o footer ir para o final da tela */
+    }
+  
+    h1 {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+  
+    h2 {
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      text-align: center;
+      color: #555;
+    }
+    .site-footer {
+  background: linear-gradient(135deg, rgba(0, 119, 255, 0.607), rgb(0, 0, 0));
+  color: white;
+  padding: 40px 20px;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo img {
+  height: 30px;
+  margin-right: 10px;
+}
+
+hr {
+  width: 100%;
+  border: 0.5px solid white;
+  margin: 20px 0;
+}
+
+.footer-links {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.footer-section a {
+  color: white;
+  text-decoration: none;
+  margin-bottom: 5px;
+}
+
+.social-icons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Media query para telas menores */
+@media (max-width: 768px) {
+  .footer-top,
+  .footer-links {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .footer-section {
+    margin-bottom: 20px;
+  }
+}
+
+  </style>
+  
+</head>
+<body>
+  <!-- Header fixo -->
+  <div class="header">
+    <div class="header-logo">
+      <img src="./img/web_hi_res_512.png" alt="Logo" class="header-icon" />
+      <span class="header-text">Encontre</span>
+    </div>
+    <!-- Botão de menu no canto direito -->
+    <button class="menu-toggle" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <!-- Botões de navegação -->
+    <div class="header-buttons">
+      <button onclick="window.location.href='index.html'">Início</button>
+      <button onclick="window.location.href='avaliecomercio.html'">Avalie um comércio</button>
+      <button onclick="window.location.href='privacidade.html'">Privacidade encontre</button>
+    </div>
+  </div>
+  <div class="container">
+    <img src="./img/icons8-posto-de-gasolina-100 (1).png" class="logo" alt="Logo Encontre">
+  </div>
+  <h1>Cadastrar Postos</h1>
+  <h2>Cadastre postos com bom preço na sua região!</h2>
+  <div class="container">
+    
+    
+
+ 
+    <form id="add-fuel-price-form">
+      <input type="text" id="nome" placeholder="Nome do posto" required>
+      <input type="text" id="endereco" placeholder="Endereço" required>
+      <input type="text" id="tipo_combustivel" placeholder="Tipo de Combustível" required>
+      <input type="number" step="0.01" id="preco" placeholder="Preço (R$)" required>
+      <input type="text" id="cidade" placeholder="Cidade" required>
+      <input type="text" id="estado" placeholder="Estado" required>
+      <button type="submit">Cadastrar</button>
+      <div>
+        <input type="text" id="filter-cidade" placeholder="Filtrar por cidade" />
+        <input type="text" id="filter-estado" placeholder="Filtrar por estado" />
+        <button onclick="filterFuelPrices()">Filtrar</button>
+      </div>
+    </form>
+    <table id="fuel-list">
+      <thead>
+        <tr>
+          <th>Nome do Posto</th>
+          <th>Endereço</th>
+          <th>Tipo de Combustível ⛽</th>
+          <th>Cidade</th>
+          <th>Estado</th>
+          <th>Preço</th>
+          <th>novo preço</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-logo">
+          <img src="./img/web_hi_res_512.png" alt="Logo">
+          <span>Encontre Tecnologia</span>
+        </div>
+      </div>
+      <hr>
+      <div class="footer-links">
+        <div class="footer-section">
+          <strong>SOBRE NÓS</strong>
+          <a href="#">Nossa empresa</a>
+          <a href="#">História</a>
+        </div>
+        <div class="footer-section">
+          <strong>PRECISA DE AJUDA?</strong>
+          <a href="#">Contate-nos</a>
+        </div>
+        <div class="footer-section">
+          <strong>LEGAL</strong>
+          <a href="#">Termos de uso</a>
+          <a href="#">Política de privacidade</a>
+        </div>
+        <div class="footer-section">
+          <strong>REDES SOCIAIS</strong>
+          <div class="social-icons">
+            <a href="https://www.instagram.com"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.linkedin.com"><i class="fab fa-linkedin"></i></a>
+            <a href="https://twitter.com"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://www.tiktok.com"><i class="fab fa-tiktok"></i></a>
+            <a href="https://www.youtube.com"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.facebook.com"><i class="fab fa-facebook-square"></i></a>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <p>&copy; 2025 The Encontre Tecnologia Company. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+  
+  <script>
+    async function loadFuelPrices() {
+      try {
+        const response = await fetch("https://encontreoficialback.azurewebsites.net/fuel-prices");
+        const data = await response.json();
+        const tableBody = document.getElementById("fuel-list").getElementsByTagName("tbody")[0];
+        tableBody.innerHTML = "";
+
+        data.forEach(post => {
+          const row = tableBody.insertRow();
+          
+          row.innerHTML = `
+  <td>${post.nome}</td>
+  <td>${post.endereco}</td>
+  <td>${post.tipo_combustivel}</td>
+  <td>${post.cidade}</td>
+  <td>${post.estado}</td>
+  <td class="price">R$ ${parseFloat(post.preco).toFixed(2)}</td>
+  <td class="actions">
+    <button class="edit-btn" onclick="editFuelPrice(${post.id}, '${post.preco}')">Editar Preço</button>
+  </td>
+`;
+
+        });
+      } catch (error) {
+        console.error("Erro ao carregar os dados:", error);
+      }
+    }
+
+    document.getElementById("add-fuel-price-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById("nome").value;
+      const endereco = document.getElementById("endereco").value;
+      const tipo_combustivel = document.getElementById("tipo_combustivel").value;
+      const preco = document.getElementById("preco").value;
+      const cidade = document.getElementById("cidade").value;
+      const estado = document.getElementById("estado").value;
+
+      try {
+        const response = await fetch("https://encontreoficialback.azurewebsites.net/add-fuel-price", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome, endereco, tipo_combustivel, preco, cidade, estado })
+        });
+
+        if (response.ok) {
+          alert("Posto cadastrado com sucesso!");
+          loadFuelPrices();
+        } else {
+          alert("Erro ao cadastrar o posto.");
+        }
+      } catch (error) {
+        console.error("Erro:", error);
+      }
+    });
+
+    async function editFuelPrice(id, currentPrice) {
+      const newPrice = prompt("Digite o novo valor (atual: R$ " + parseFloat(currentPrice).toFixed(2) + "):");
+      if (newPrice === null || newPrice === "") return;
+
+      const normalizedPrice = newPrice.replace(",", ".");
+
+      try {
+        const response = await fetch(`https://encontreoficialback.azurewebsites.net/fuel-price/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ preco: normalizedPrice })
+        });
+
+        if (response.ok) {
+          alert("Preço atualizado!");
+          loadFuelPrices();
+        } else {
+          alert("Erro ao atualizar o preço.");
+        }
+      } catch (error) {
+        console.error("Erro:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+  const header = document.querySelector(".header");
+
+  // Função que é chamada quando a rolagem ocorre
+  function toggleHeaderOnScroll() {
+    if (window.scrollY <= 0) {
+      header.classList.remove("hide-header"); // Mostra o header quando estiver no topo
+    } else {
+      header.classList.add("hide-header"); // Esconde o header quando não estiver no topo
+    }
+  }
+
+  // Chama a função na rolagem da página
+  window.addEventListener("scroll", toggleHeaderOnScroll);
+
+  // Chama a função para verificar a posição ao carregar a página
+  toggleHeaderOnScroll();
+});
+
+function toggleMenu() {
+  const headerButtons = document.querySelector(".header-buttons");
+  headerButtons.classList.toggle("show");
+}
+
+
+async function loadFuelPrices(cidade = '', estado = '') {
+  try {
+    let url = `https://encontreoficialback.azurewebsites.net/fuel-prices?cidade=${cidade}&estado=${estado}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const tableBody = document.getElementById("fuel-list").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = "";
+
+    data.forEach(post => {
+      const row = tableBody.insertRow();
+      
+      row.innerHTML = `
+        <td>${post.nome}</td>
+        <td>${post.endereco}</td>
+        <td>${post.tipo_combustivel}</td>
+        <td>${post.cidade}</td>
+        <td>${post.estado}</td>
+        <td class="price">R$ ${parseFloat(post.preco).toFixed(2)}</td>
+        <td class="actions">
+          <button class="edit-btn" onclick="editFuelPrice(${post.id}, '${post.preco}')">Editar Preço</button>
+        </td>
+      `;
+    });
+  } catch (error) {
+    console.error("Erro ao carregar os dados:", error);
+  }
+}
+
+function filterFuelPrices() {
+  const cidade = document.getElementById("filter-cidade").value;
+  const estado = document.getElementById("filter-estado").value;
+  loadFuelPrices(cidade, estado);
+}
+
+
+    loadFuelPrices();
+  </script>
+
+</body>
+</html>

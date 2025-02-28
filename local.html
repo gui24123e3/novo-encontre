@@ -99,7 +99,7 @@
         // Função para buscar os comércios da API
         async function carregarComercios() {
             try {
-                const response = await fetch('https://backendecontre2.azurewebsites.net/comercio');
+                const response = await fetch('http://localhost:8080/comercio');
                 const comercios = await response.json();
 
                 const comercioList = document.getElementById('comercioList');
@@ -131,45 +131,10 @@
             }
         }
 
-        // Função para verificar se o usuário está logado
-        function verificarLogin() {
-            const token = localStorage.getItem('token');
-            const userNameElement = document.getElementById('userName');
-            const logoutButton = document.getElementById('logoutButton');
-
-            if (!token) {
-                window.location.href = 'login.html'; // Redireciona para login se não houver token
-                return;
-            }
-
-            fetch('http://localhost:3000/api/usuarios/me', {
-                headers: {
-                    'Authorization': token,
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.nome) {
-                    userNameElement.textContent = data.nome;
-                } else {
-                    window.location.href = 'login.html'; // Redireciona para login em caso de erro
-                }
-            })
-            .catch(() => {
-                window.location.href = 'login.html'; // Redireciona para login em caso de erro
-            });
-
-            // Evento de logout
-
-            logoutButton.addEventListener('click', function() {
-                localStorage.removeItem('token');
-                window.location.href = 'login.html'; // Redireciona para o login após logout
-            });
-        }
 
         // Chama as funções quando a página carrega
         window.onload = function() {
-            verificarLogin(); // Verifica login
+           
             carregarComercios(); // Carrega os comercios
         };
     </script>
