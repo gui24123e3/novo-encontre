@@ -93,19 +93,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             <h3>${comercio.nome}</h3>
             <p><strong>Categoria:</strong> ${comercio.categoria}</p>
             <p><strong>Endereço:</strong> ${comercio.endereco}</p>
-            <p><strong>Formas de pagamento:</strong> ${
-              comercio.formas_pagamento
-            }</p>
-            <p><strong>Contém Wifi:</strong> ${comercio.wifi_disponivelo}</p>
-            <p><strong>Numero de Vagas para estacionar:</strong> ${
-              comercio.formas_pagamento
-            }</p>
-            <p><strong>Estacionamento Tipo Pago ou Gratuito:</strong> ${
-              comercio.formas_pagamento
-            }</p>
             <p><strong>Horário:</strong> ${
               comercio.horario_funcionamento || "Não informado"
             }</p>
+               <p><strong>Descição:</strong>
             <p>${comercio.descricao || ""}</p>
             ${socialLinksHtml}
             
@@ -251,4 +242,14 @@ function startVoiceSearch() {
   } else {
     alert("Seu navegador não suporta pesquisa por voz.");
   }
+}
+
+function openPopup() {
+  const popup = document.getElementById("privacyPopup");
+  popup.style.display = "flex"; // Exibir o popup corretamente
+}
+
+function closePopup() {
+  const popup = document.getElementById("privacyPopup");
+  popup.style.display = "none"; // Ocultar o popup
 }

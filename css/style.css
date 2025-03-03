@@ -258,26 +258,90 @@ body {
         grid-template-columns: 1fr 1fr;
     }
 }
+/* Grid responsivo para manter os cards alinhados */
+.comercio-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Card dos comércios com altura fixa */
 .comercio-card {
-    background: linear-gradient(135deg, rgb(191, 219, 250), rgb(254, 254, 254));
-    padding: 20px;
-    border: 1px solid #ddd;
+    background: white;
+    padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-align: center;
-    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%; /* Garante que todos os cards tenham a mesma altura */
 }
 
-.comercio-card:hover {
-    transform: translateY(-5px);
-}
-
+/* Ajusta imagens para evitar tamanhos irregulares */
 .comercio-imagem {
-    width: 100%;
-    height: 700px;
+    width: 160%;
+    height: 260px; /* Tamanho fixo para evitar distorções */
     object-fit: cover;
     border-radius: 8px;
+}
+
+/* Nome do comércio */
+.comercio-card h3 {
+    font-size: 1.5rem;
+    color: #333;
     margin-bottom: 10px;
+}
+
+/* Descrição do comércio */
+.comercio-card p {
+    font-size: 1rem;
+    color: #666;
+    text-align: left;
+    line-height: 1.4;
+    flex-grow: 1; /* Faz com que a descrição ocupe espaço disponível */
+}
+
+/* Botões padronizados dentro dos cards */
+.comercio-links {
+    display: flex;
+    justify-content: center;
+    gap: 0px;
+    margin-top: 15px;
+}
+
+.btn-social {
+    padding: 8px 15px;
+    border-radius: 28px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s ease;
+    flex: 1; /* Todos os botões terão o mesmo tamanho */
+    text-align: center;
+}
+
+.btn-social:hover {
+    opacity: 0.8;
+}
+
+/* Cores específicas para cada tipo de link */
+.btn-social[href*="facebook"] {
+    background-color: #3b5998;
+    color: white;
+}
+
+.btn-social[href*="instagram"] {
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    color: white;
+}
+
+.btn-social[href*="site"] {
+    background-color: #007bff;
+    color: white;
 }
 
 @media screen and (max-width: 768px) {
@@ -558,38 +622,44 @@ body {
       text-align: center;
     }
   }
-
-  /* Estilos Pop Up de Privacidade */
   .popup {
     position: fixed;
-    bottom: 20px;
+    top: 90%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background: white;
     padding: 15px;
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     display: none; /* Oculto por padrão */
     z-index: 1000;
-  }
-  
+}
+
+  /* Estilos Pop Up de Privacidade */
   .popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* Fundo escurecido */
-    backdrop-filter: blur(8px); /* Efeito de desfoque */
-    display: flex;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none; /* oculto por padrão */
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    display: none; /* Escondido por padrão */
-}
+  }
+  
+
   
 /* Popup Content - Centralizado */
-.popup-content {
+/* Quando ativado, exibe o overlay */
+.popup-overlay.active {
+    display: flex;
+  }
+  
+  /* Conteúdo do pop-up centralizado automaticamente */
+  .popup-content {
     background: white;
     padding: 25px;
     border-radius: 25px;
@@ -599,8 +669,7 @@ body {
     max-width: 450px;
     text-align: center;
     position: relative;
-}
-  
+  }
   .close-btn {
     position: absolute;
     top: 10px;
